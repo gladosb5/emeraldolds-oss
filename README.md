@@ -1,6 +1,6 @@
 # EmeraldNews OSS
 
-An open-source version of **EmeraldNews** — a Roblox private server web application (originally built for class 6 Emerald). This codebase powers the archived site at [emeraldolds.glados.pro](https://emeraldolds.glados.pro).
+An open-source version of **EmeraldNews** — a news web application (originally built for class 6 Emerald). This codebase powers the archived site at [emeraldolds.glados.pro](https://emeraldolds.glados.pro).
 
 > ⚠️ **Warning:** This codebase is no longer maintained and is provided as-is for archival/educational purposes. No bug fixes or updates should be expected. The actively maintained version lives at [emeraldnews.glados.pro](https://emeraldnews.glados.pro).
 
