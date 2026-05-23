@@ -1,0 +1,6 @@
+Options +Indexes
+Allow from all
+
+<FilesMatch "\.(html|php|css|js|png|jpg|jpeg|gif)$">
+    Require all granted
+</FilesMatch>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draw the Missing Part - Captcha</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .captcha-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .captcha-title {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .captcha-instruction {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f9f9f9;
+        }
+
+        .base-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .drawing-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            border-radius: 7px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .brush-size {
+            margin: 0 10px;
+        }
+
+        .brush-size input {
+            width: 100px;
+        }
+
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .result-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .challenge-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        @media (max-width: 768px) {
+            .captcha-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="captcha-container">
+        <h1 class="captcha-title">🎨 Draw the Missing Part</h1>
+        <p class="captcha-instruction">
+            Complete the drawing by adding the missing part. Use your mouse or finger to draw on the image.
+        </p>
+        
+        <div class="challenge-info" id="challengeInfo">
+            <strong>Challenge:</strong> <span id="challengeText">Draw the missing wheel on the car</span>
+        </div>
+
+        <div class="image-container" id="imageContainer">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIENhciBib2R5IC0tPgogIDxyZWN0IHg9IjUwIiB5PSIxMDAiIHdpZHRoPSIzMDAiIGhlaWdodD0iODAiIGZpbGw9IiM0Mjg1RjQiIHJ4PSIxMCIvPgogIDwhLS0gQ2FyIHJvb2YgLS0+CiAgPHBvbHlnb24gcG9pbnRzPSIxMDAsMTAwIDE1MCw2MCAyNTAsNjAgMzAwLDEwMCIgZmlsbD0iIzQyODVGNCIvPgogIDwhLS0gV2luZG93cyAtLT4KICA8cmVjdCB4PSIxMTAiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8cmVjdCB4PSIxODAiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8cmVjdCB4PSIyNTAiIHk9IjcwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8IS0tIERvb3JzIC0tPgogIDxsaW5lIHgxPSIxNzUiIHkxPSIxMDAiIHgyPSIxNzUiIHkyPSIxODAiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPGxpbmUgeDE9IjI3NSIgeTE9IjEwMCIgeDI9IjI3NSIgeTI9IjE4MCIgc3Ryb2tlPSIjMzM3M0RDIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEZyb250IGxpZ2h0IC0tPgogIDxjaXJjbGUgY3g9IjM0MCIgY3k9IjEyMCIgcj0iMTAiIGZpbGw9IiNGRkVCM0IiLz4KICA8IS0tIEJhY2sgbGlnaHQgLS0+CiAgPGNpcmNsZSBjeD0iNjAiIGN5PSIxMjAiIHI9IjgiIGZpbGw9IiNFRjQ0NDQiLz4KICA8IS0tIEZyb250IHdoZWVsIC0tPgogIDxjaXJjbGUgY3g9IjI5MCIgY3k9IjE5MCIgcj0iMzAiIGZpbGw9IiMzNzM3MzciLz4KICA8Y2lyY2xlIGN4PSIyOTAiIGN5PSIxOTAiIHI9IjIwIiBmaWxsPSIjNkI3Mjc5Ii8+CiAgPGNpcmNsZSBjeD0iMjkwIiBjeT0iMTkwIiByPSIxMCIgZmlsbD0iIzM3MzczNyIvPgogIDwhLS0gQmFjayB3aGVlbCBpcyBtaXNzaW5nIC0gdGhpcyBpcyB3aGF0IHRoZSB1c2VyIG5lZWRzIHRvIGRyYXcgLS0+CiAgPCEtLSBCYWNrIHdoZWVsIHNob3VsZCBiZSBhdCBjeD0iMTEwIiBjeT0iMTkwIiAtLT4KICA8IS0tIEdyb3VuZCBsaW5lIC0tPgogIDxsaW5lIHgxPSIwIiB5MT0iMjIwIiB4Mj0iNDAwIiB5Mj0iMjIwIiBzdHJva2U9IiM2Qjc0NzkiIHN0cm9rZS13aWR0aD0iMyIvPgo8L3N2Zz4=" alt="Car with missing wheel" class="base-image" id="baseImage">
+            <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="brush-size">
+                <label for="brushSize">Brush Size:</label>
+                <input type="range" id="brushSize" min="2" max="20" value="8">
+                <span id="brushSizeValue">8</span>px
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="clearCanvas()">Clear Drawing</button>
+            <button class="btn btn-primary" onclick="submitDrawing()">Submit</button>
+            <button class="btn btn-secondary" onclick="newChallenge()">New Challenge</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Verifying your drawing...</p>
+        </div>
+
+        <div class="result-message" id="resultMessage"></div>
+    </div>
+
+    <script>
+        let canvas, ctx;
+        let isDrawing = false;
+        let currentChallenge = 'car_wheel';
+        
+        const challenges = {
+            car_wheel: {
+                text: "Draw the missing wheel on the car",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIENhciBib2R5IC0tPgogIDxyZWN0IHg9IjUwIiB5PSIxMDAiIHdpZHRoPSIzMDAiIGhlaWdodD0iODAiIGZpbGw9IiM0Mjg1RjQiIHJ4PSIxMCIvPgogIDwhLS0gQ2FyIHJvb2YgLS0+CiAgPHBvbHlnb24gcG9pbnRzPSIxMDAsMTAwIDE1MCw2MCAyNTAsNjAgMzAwLDEwMCIgZmlsbD0iIzQyODVGNCIvPgogIDwhLS0gV2luZG93cyAtLT4KICA8cmVjdCB4PSIxMTAiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8cmVjdCB4PSIxODAiIHk9IjcwIiB3aWR0aD0iNjAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8cmVjdCB4PSIyNTAiIHk9IjcwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjUiIGZpbGw9IiNFM0Y2RkYiLz4KICA8IS0tIERvb3JzIC0tPgogIDxsaW5lIHgxPSIxNzUiIHkxPSIxMDAiIHgyPSIxNzUiIHkyPSIxODAiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPGxpbmUgeDE9IjI3NSIgeTE9IjEwMCIgeDI9IjI3NSIgeTI9IjE4MCIgc3Ryb2tlPSIjMzM3M0RDIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIEZyb250IGxpZ2h0IC0tPgogIDxjaXJjbGUgY3g9IjM0MCIgY3k9IjEyMCIgcj0iMTAiIGZpbGw9IiNGRkVCM0IiLz4KICA8IS0tIEJhY2sgbGlnaHQgLS0+CiAgPGNpcmNsZSBjeD0iNjAiIGN5PSIxMjAiIHI9IjgiIGZpbGw9IiNFRjQ0NDQiLz4KICA8IS0tIEZyb250IHdoZWVsIC0tPgogIDxjaXJjbGUgY3g9IjI5MCIgY3k9IjE5MCIgcj0iMzAiIGZpbGw9IiMzNzM3MzciLz4KICA8Y2lyY2xlIGN4PSIyOTAiIGN5PSIxOTAiIHI9IjIwIiBmaWxsPSIjNkI3Mjc5Ii8+CiAgPGNpcmNsZSBjeD0iMjkwIiBjeT0iMTkwIiByPSIxMCIgZmlsbD0iIzM3MzczNyIvPgogIDwhLS0gQmFjayB3aGVlbCBpcyBtaXNzaW5nIC0gdGhpcyBpcyB3aGF0IHRoZSB1c2VyIG5lZWRzIHRvIGRyYXcgLS0+CiAgPCEtLSBCYWNrIHdoZWVsIHNob3VsZCBiZSBhdCBjeD0iMTEwIiBjeT0iMTkwIiAtLT4KICA8IS0tIEdyb3VuZCBsaW5lIC0tPgogIDxsaW5lIHgxPSIwIiB5MT0iMjIwIiB4Mj0iNDAwIiB5Mj0iMjIwIiBzdHJva2U9IiM2Qjc0NzkiIHN0cm9rZS13aWR0aD0iMyIvPgo8L3N2Zz4=",
+                expectedArea: {x: 80, y: 160, width: 60, height: 60}
+            },
+            house_door: {
+                text: "Draw the missing door on the house",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEhvdXNlIGJhc2UgLS0+CiAgPHJlY3QgeD0iMTAwIiB5PSIxNTAiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRkZEQjRDIi8+CiAgPCEtLSBSb29mIC0tPgogIDxwb2x5Z29uIHBvaW50cz0iODAsMTUwIDIwMCw4MCAzMjAsMTUwIiBmaWxsPSIjRUY0NDQ0Ii8+CiAgPCEtLSBXaW5kb3dzIC0tPgogIDxyZWN0IHg9IjEyMCIgeT0iMTcwIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFM0Y2RkYiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPHJlY3QgeD0iMjQwIiB5PSIxNzAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0iI0UzRjZGRiIgc3Ryb2tlPSIjMzM3M0RDIiBzdHJva2Utd2lkdGg9IjIiLz4KICA8IS0tIFdpbmRvdyBjcm9zc2VzIC0tPgogIDxsaW5lIHgxPSIxNDAiIHkxPSIxNzAiIHgyPSIxNDAiIHkyPSIyMTAiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPGxpbmUgeDE9IjEyMCIgeTE9IjE5MCIgeDI9IjE2MCIgeTI9IjE5MCIgc3Ryb2tlPSIjMzM3M0RDIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8bGluZSB4MT0iMjYwIiB5MT0iMTcwIiB4Mj0iMjYwIiB5Mj0iMjEwIiBzdHJva2U9IiMzMzczREMiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSIyNDAiIHkxPSIxOTAiIHgyPSIyODAiIHkyPSIxOTAiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPCEtLSBEb29yIGlzIG1pc3NpbmcgLSBzaG91bGQgYmUgYXQgeD0iMTgwIiB5PSIyMDAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI3MCIgLS0+CiAgPCEtLSBHcmFzcyAtLT4KICA8cmVjdCB4PSIwIiB5PSIyNzAiIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAiIGZpbGw9IiM0OEJCNzgiLz4KPC9zdmc+",
+                expectedArea: {x: 160, y: 200, width: 60, height: 70}
+            },
+            face_smile: {
+                text: "Draw the missing smile on the face",
+                image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIEZhY2UgLS0+CiAgPGNpcmNsZSBjeD0iMjAwIiBjeT0iMjAwIiByPSIxNDAiIGZpbGw9IiNGRkVCM0IiIHN0cm9rZT0iIzMzNzNEQyIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPCEtLSBFeWVzIC0tPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjE2MCIgcj0iMTUiIGZpbGw9IiMzNzM3MzciLz4KICA8Y2lyY2xlIGN4PSIyNDAiIGN5PSIxNjAiIHI9IjE1IiBmaWxsPSIjMzczNzM3Ii8+CiAgPCEtLSBOb3NlIC0tPgogIDxlbGxpcHNlIGN4PSIyMDAiIGN5PSIyMDAiIHJ4PSI4IiByeT0iMTIiIGZpbGw9IiNGRkQ3MDAiLz4KICA8IS0tIE1vdXRoL3NtaWxlIGlzIG1pc3NpbmcgLSBzaG91bGQgYmUgYSBjdXJ2ZSBhdCBjeSBhcm91bmQgMjUwIC0tPgo8L3N2Zz4=",
+                expectedArea: {x: 140, y: 230, width: 120, height: 40}
+            }
+        };
+
+        function initCanvas() {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+            
+            const img = document.getElementById('baseImage');
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                setupCanvasEvents();
+            };
+            
+            // If image is already loaded
+            if (img.complete) {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                setupCanvasEvents();
+            }
+        }
+
+        function setupCanvasEvents() {
+            // Mouse events
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('touchmove', handleTouch);
+            canvas.addEventListener('touchend', stopDrawing);
+
+            // Brush size control
+            const brushSizeSlider = document.getElementById('brushSize');
+            const brushSizeValue = document.getElementById('brushSizeValue');
+            
+            brushSizeSlider.addEventListener('input', function() {
+                brushSizeValue.textContent = this.value;
+            });
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function getTouchPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (e.touches[0].clientX - rect.left) * scaleX,
+                y: (e.touches[0].clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getMousePos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const pos = getMousePos(e);
+            const brushSize = document.getElementById('brushSize').value;
+            
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#333';
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hideResult();
+        }
+
+        function submitDrawing() {
+            const loading = document.getElementById('loading');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            loading.style.display = 'block';
+            resultMessage.style.display = 'none';
+            
+            // Get canvas data
+            const imageData = canvas.toDataURL();
+            
+            // Simulate verification process
+            setTimeout(() => {
+                const isValid = verifyDrawing();
+                loading.style.display = 'none';
+                showResult(isValid);
+            }, 1500);
+        }
+
+        function verifyDrawing() {
+            // Simple verification: check if there's drawing in the expected area
+            const challenge = challenges[currentChallenge];
+            const expectedArea = challenge.expectedArea;
+            
+            const imageData = ctx.getImageData(
+                expectedArea.x, 
+                expectedArea.y, 
+                expectedArea.width, 
+                expectedArea.height
+            );
+            
+            // Count non-transparent pixels
+            let drawnPixels = 0;
+            for (let i = 3; i < imageData.data.length; i += 4) {
+                if (imageData.data[i] > 0) { // Alpha channel > 0
+                    drawnPixels++;
+                }
+            }
+            
+            // Require at least 50 pixels drawn in the expected area
+            return drawnPixels > 50;
+        }
+
+        function showResult(isValid) {
+            const resultMessage = document.getElementById('resultMessage');
+            resultMessage.style.display = 'block';
+            
+            if (isValid) {
+        window.parent.postMessage({ type : 'drawingCaptcha', success : true }, '*');
+    }
+}
+
+        function hideResult() {
+            document.getElementById('resultMessage').style.display = 'none';
+        }
+
+        function newChallenge() {
+            const challengeKeys = Object.keys(challenges);
+            const randomKey = challengeKeys[Math.floor(Math.random() * challengeKeys.length)];
+            currentChallenge = randomKey;
+            
+            const challenge = challenges[currentChallenge];
+            document.getElementById('challengeText').textContent = challenge.text;
+            document.getElementById('baseImage').src = challenge.image;
+            
+            clearCanvas();
+            hideResult();
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', initCanvas);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+  <External>null</External>
+  <External>nil</External>
+  <Item class="Shirt" referent="RBX0">
+    <Properties>
+      <Content name="ShirtTemplate">
+        <url>http://gchblox.tk/asset/?id=1555</url>
+      </Content>
+      <string name="Name">Shirt</string>
+      <bool name="archivable">true</bool>
+    </Properties>
+  </Item>
+</roblox>
+
+
+

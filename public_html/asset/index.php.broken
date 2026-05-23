@@ -1,0 +1,11 @@
+<?php
+$id = 1;
+if(isset($_GET['id'])) {
+    $id = (int)$_GET["id"];
+} elseif(isset($_GET['assetversionid'])) {
+    $id = (int)$_GET["assetversionid"];
+}
+header("location:" . "http://emeraldolds.glados.pro/asset?id=".$id);
+?>
+
+

@@ -1,0 +1,18 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.emeraldolds.glados.pro/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Sound" referent="RBX0">
+		<Properties>
+			<bool name="Looped">false</bool>
+			<string name="Name">Sound</string>
+			<float name="Pitch">1</float>
+			<int name="PlayCount">-1</int>
+			<bool name="PlayOnRemove">false</bool>
+			<Content name="SoundId"><url>http://emeraldolds.glados.pro/asset/?id=2889</url></Content>
+			<float name="Volume">0.5</float>
+			<bool name="archivable">true</bool>
+		</Properties>
+	</Item>
+</roblox>
+
+
